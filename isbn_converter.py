@@ -1,3 +1,11 @@
+__version__ = "0.0.2"
+
+...
+
+# タイトル・ラベルなどにバージョンを表示
+fsg.Text(f"ISBN変換ツール v{__version__}", ...)
+
+
 import FreeSimpleGUI as fsg
 
 fsg.theme("SystemDefault1")
