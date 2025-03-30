@@ -1,10 +1,4 @@
-__version__ = "0.0.2"
-
-...
-
-# タイトル・ラベルなどにバージョンを表示
-fsg.Text(f"ISBN変換ツール v{__version__}", ...)
-
+__version__ = "0.0.3"
 
 import FreeSimpleGUI as fsg
 
@@ -49,7 +43,7 @@ def convert_isbn_list(isbn_list):
 # 📐 整然としたミニマルな縦ラベル＋欄の配置
 # レイアウト定義部分（更新済）
 layout = [
-    [fsg.Text("ISBN変換ツール", font=("Segoe UI", 14, "bold"), justification="center", expand_x=True)],
+    [fsg.Text(f"ISBN変換ツール v{__version__}", font=("Segoe UI", 14, "bold"), justification="center", expand_x=True)],
 
     [
         fsg.Column([
