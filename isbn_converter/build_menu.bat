@@ -104,7 +104,28 @@ goto finish
 
 :finish
 echo.
-echo ビルド完了！dist フォルダを開きます。
-start dist
+echo 配布用フォルダを作成中...
+
+if not exist dist\app mkdir dist\app
+copy /Y app\isbn_gui.exe dist\app\
+copy /Y app\version.txt dist\app\
+copy /Y app\isbn_icon.ico dist\app\
+
+echo.
+echo ZIPファイルを作成中...
+
+cd dist
+if exist isbn_package_v%VERSION%.zip del /q isbn_package_v%VERSION%.zip
+
+powershell -Command "Compress-Archive -Path 'isbn_converter.exe','app' -DestinationPath 'isbn_package_v%VERSION%.zip'"
+
+echo.
+echo ZIP作成完了。dist\app を削除します...
+rmdir /s /q app
+
+echo.
+echo 作成完了: isbn_package_v%VERSION%.zip
+start .
+cd ..
 pause
 exit
