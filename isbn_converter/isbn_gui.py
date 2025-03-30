@@ -3,7 +3,7 @@ import os
 import sys
 
 # アプリのバージョン（ここを書き換えるだけ！）
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 
 # version.txt を自動生成・上書き保存
 def write_version_file():
