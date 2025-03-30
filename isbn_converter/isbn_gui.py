@@ -1,25 +1,10 @@
+# ===== フォルダ内アイコン対応 最終版 isbn_gui.py（本体） =====
+
 import FreeSimpleGUI as fsg
 import os
-import sys
 
-# アプリのバージョン（ここを書き換えるだけ！）
-__version__ = "0.0.6"
-
-# version.txt を自動生成・上書き保存
-def write_version_file():
-    try:
-        base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
-    except AttributeError:
-        base_path = os.path.dirname(os.path.abspath(__file__))
-    version_path = os.path.join(base_path, "version.txt")
-    try:
-        with open(version_path, "w", encoding="utf-8") as f:
-            f.write(__version__)
-    except Exception as e:
-        print("version.txt 書き込みエラー:", e)
-
-# 起動時に version.txt を保存
-write_version_file()
+__version__ = "0.0.8"
+ICON_PATH = os.path.join(os.path.dirname(__file__), "app", "isbn_icon.ico")
 
 # ---------- ISBN変換ロジック ----------
 def convert_isbn(isbn10: str) -> str:
@@ -86,7 +71,7 @@ layout = [
     ]
 ]
 
-window = fsg.Window(f"ISBN変換アプリ v{__version__}", layout, resizable=False)
+window = fsg.Window(f"ISBN変換アプリ v{__version__}", layout, resizable=False, icon=ICON_PATH)
 
 # ---------- イベントループ ----------
 while True:

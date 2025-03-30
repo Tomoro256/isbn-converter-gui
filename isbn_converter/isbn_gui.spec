@@ -5,7 +5,7 @@ a = Analysis(
     ['isbn_gui.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('app\\isbn_icon.ico', 'app')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -35,4 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=['app\\isbn_icon.ico'],
 )
