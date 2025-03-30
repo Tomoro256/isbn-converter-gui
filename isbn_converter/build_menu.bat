@@ -115,16 +115,15 @@ echo.
 echo ZIPファイルを作成中...
 
 cd dist
-if exist isbn_package_v%VERSION%.zip del /q isbn_package_v%VERSION%.zip
-
-powershell -Command "Compress-Archive -Path 'isbn_converter.exe','app' -DestinationPath 'isbn_package_v%VERSION%.zip'"
+if exist isbn_converter.zip del /q isbn_converter.zip
+powershell -Command "Compress-Archive -Path 'isbn_converter.exe','app' -DestinationPath 'isbn_converter.zip'"
 
 echo.
 echo ZIP作成完了。dist\app を削除します...
 rmdir /s /q app
 
 echo.
-echo 作成完了: isbn_package_v%VERSION%.zip
+echo 作成完了: isbn_converter.zip
 start .
 cd ..
 pause
