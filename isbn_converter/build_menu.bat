@@ -122,6 +122,7 @@ if not exist dist\app mkdir dist\app
 copy /Y dist\isbn_gui.exe dist\app\
 copy /Y app\version.txt dist\app\
 copy /Y app\isbn_icon.ico dist\app\
+copy /Y app\data.db dist\app\
 
 echo.
 echo ZIPƒtƒ@ƒCƒ‹‚ğì¬’†...
