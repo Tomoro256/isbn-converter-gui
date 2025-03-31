@@ -2,10 +2,10 @@
 import FreeSimpleGUI as fsg
 import os
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 import shutil
 
-__version__ = "0.0.18"
+__version__ = "0.0.19"
 ICON_PATH = os.path.join(os.path.dirname(__file__), "app", "isbn_icon.ico")
 DB_PATH = r"G:\マイドライブ\ISBN履歴共有\data.db"
 LOGS_DIR = "logs"
@@ -104,11 +104,20 @@ def show_admin_window():
     cur.execute("""SELECT conversions.created_at, users.username, conversions.isbn10, conversions.isbn13
                    FROM conversions JOIN users ON conversions.user_id = users.id
                    ORDER BY conversions.created_at DESC""")
+    
+    from datetime import datetime, timedelta  # ファイル上部で1回だけでOK
+
     records = cur.fetchall()
     conn.close()
 
     headings = ["日時", "ユーザー名", "10桁ISBN", "13桁ISBN"]
-    data = [list(row) for row in records]
+    data = [
+        [
+            (datetime.fromisoformat(row[0]) + timedelta(hours=9)).strftime("%Y-%m-%d %H:%M:%S"),
+            row[1], row[2], row[3]
+        ]
+        for row in records
+    ]
 
 
 # --- GUIのレイアウト（画面構成） ---
@@ -196,9 +205,16 @@ def show_login_logs_window():
     records = cur.fetchall()
     conn.close()
 
+    jst_records = [
+        [
+            (datetime.fromisoformat(r[0]) + timedelta(hours=9)).strftime("%Y-%m-%d %H:%M:%S"),r[1]
+        ]
+        for r in records
+    ]
+
     layout = [
         [fsg.Table(
-            values=[[r[0], r[1]] for r in records],
+            values=jst_records,
             headings=["ログイン日時", "ユーザー名"],
             auto_size_columns=False,
             col_widths=[25, 15],
