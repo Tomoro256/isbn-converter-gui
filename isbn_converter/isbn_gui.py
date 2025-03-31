@@ -5,7 +5,7 @@ import sqlite3
 from datetime import datetime
 import shutil
 
-__version__ = "0.0.17"
+__version__ = "0.0.18"
 ICON_PATH = os.path.join(os.path.dirname(__file__), "app", "isbn_icon.ico")
 DB_PATH = r"G:\マイドライブ\ISBN履歴共有\data.db"
 LOGS_DIR = "logs"
@@ -183,6 +183,82 @@ def change_password_window(username):
             break
     win.close()
 
+# --- 管理者用：ログイン履歴をGUI表示する関数 ---
+def show_login_logs_window():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT login_logs.login_at, users.username
+        FROM login_logs
+        JOIN users ON login_logs.user_id = users.id
+        ORDER BY login_logs.login_at DESC
+    """)
+    records = cur.fetchall()
+    conn.close()
+
+    layout = [
+        [fsg.Table(
+            values=[[r[0], r[1]] for r in records],
+            headings=["ログイン日時", "ユーザー名"],
+            auto_size_columns=False,
+            col_widths=[25, 15],
+            justification="left",
+            num_rows=20
+        )],
+        [fsg.Button("閉じる", key="CLOSE")]
+    ]
+    win = fsg.Window("ログイン履歴", layout, modal=True, icon=ICON_PATH, resizable=True)
+    while True:
+        ev, _ = win.read()
+        if ev in (fsg.WIN_CLOSED, "CLOSE"):
+            break
+    win.close()
+
+# --- 管理者用：ユーザー管理画面（一覧・編集・削除） ---
+def show_user_management_window():
+    def load_users():
+        cur.execute("SELECT id, username FROM users ORDER BY id")
+        return cur.fetchall()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    users = load_users()
+    user_list = [f"{u[0]}: {u[1]}" for u in users]
+
+    layout = [
+        [fsg.Listbox(user_list, size=(30, 10), key="USERLIST", enable_events=True)],
+        [fsg.Button("パスワード変更"), fsg.Button("削除"), fsg.Button("閉じる")]
+    ]
+    win = fsg.Window("ユーザー管理", layout, modal=True, icon=ICON_PATH)
+
+    while True:
+        ev, val = win.read()
+        if ev in (fsg.WIN_CLOSED, "閉じる"):
+            break
+        if ev in ("パスワード変更", "削除") and val["USERLIST"]:
+            uid, uname = val["USERLIST"][0].split(": ")
+            uid = int(uid)
+            if ev == "削除":
+                if uname == "admin":
+                    fsg.popup_error("adminは削除できません", icon=ICON_PATH)
+                    continue
+                cur.execute("DELETE FROM users WHERE id=?", (uid,))
+                conn.commit()
+                fsg.popup("削除しました", icon=ICON_PATH)
+            elif ev == "パスワード変更":
+                pw = fsg.popup_get_text(f"{uname} の新しいパスワードを入力", password_char="*", icon=ICON_PATH)
+                if pw:
+                    cur.execute("UPDATE users SET password=? WHERE id=?", (pw, uid))
+                    conn.commit()
+                    fsg.popup("変更しました", icon=ICON_PATH)
+            users = load_users()
+            win["USERLIST"].update(values=[f"{u[0]}: {u[1]}" for u in users])
+
+    conn.close()
+    win.close()
+
+
 # ---------- GUI ----------
 fsg.theme("SystemDefault1")
 fsg.set_options(font=("Segoe UI", 10))
@@ -265,6 +341,8 @@ layout = [
 if is_admin:
     layout[-1].insert(-2, fsg.Button("管理画面", key="ADMIN"))
     layout[-1].insert(-2, fsg.Button("ユーザー追加", key="ADDUSER"))
+    layout[-1].insert(-2, fsg.Button("ログイン履歴", key="LOGS"))
+    layout[-1].insert(-2, fsg.Button("ユーザー管理", key="USERMGR"))
 
 layout[-1].insert(-2, fsg.Button("パスワード変更", key="CHANGEPW"))
 
@@ -315,6 +393,12 @@ while True:
     elif event == "ADDUSER":
         add_user_window()
 
+    elif event == "LOGS":
+        show_login_logs_window()
+
+    elif event == "USERMGR":
+        show_user_management_window()
+
     elif event == "CHANGEPW":
         change_password_window(username)
 
@@ -331,3 +415,5 @@ if not is_admin and log_db_path:
         print(f"ログをGoogleドライブに送信しました：{dest}")
     except Exception as e:
         print(f"Googleドライブ送信エラー: {e}")
+
+
