@@ -64,7 +64,13 @@ echo GitHub の最新リリースと比較しています...
 for /f "delims=" %%i in ('gh release view --repo Tomoro256/isbn-converter-gui --json tagName -q ".tagName" 2^>nul') do set LATEST_TAG=%%i
 
 if "%LATEST_TAG%"=="" (
-    echo リリースがまだ存在しません。v%VERSION% を初回リリースとして作成します。
+    echo リリースがまだ存在しません。v%VERSION% を初回リリースとして作成します.
+
+    REM ★ ここで dist\app にファイルを準備
+    if not exist dist\app mkdir dist\app
+    copy /Y dist\isbn_gui.exe dist\app\
+    copy /Y app\version.txt dist\app\
+
     goto github_release
 )
 
@@ -74,7 +80,13 @@ echo GitHub上の最新リリース: [%LATEST_VER%]
 powershell -Command "try { if ([version]'%VERSION%' -gt [version]'%LATEST_VER%') { exit 0 } else { exit 1 } } catch { exit 0 }"
 
 if %ERRORLEVEL%==0 (
-    echo 現在のバージョン [%VERSION%] は新しいため、リリースを作成します。
+    echo 現在のバージョン [%VERSION%] は新しいため、リリースを作成します.
+
+    REM ★ ここで dist\app にファイルを準備
+    if not exist dist\app mkdir dist\app
+    copy /Y dist\isbn_gui.exe dist\app\
+    copy /Y app\version.txt dist\app\
+
     goto github_release
 ) else (
     echo [%VERSION%] は最新と同じか古いため、リリースをスキップします。
@@ -83,31 +95,31 @@ if %ERRORLEVEL%==0 (
 
 :github_release
 echo.
-if not exist "app\isbn_gui.exe" echo  ファイルが見つかりません: app\isbn_gui.exe
-if not exist "app\version.txt" echo  ファイルが見つかりません: app\version.txt
+if not exist "dist\app\isbn_gui.exe" echo  ファイルが見つかりません: dist\app\isbn_gui.exe
+if not exist "dist\app\version.txt" echo  ファイルが見つかりません: dist\app\version.txt
 
 echo GitHub にリリースを作成しています...
-gh release create v%VERSION% "app\isbn_gui.exe" "app\version.txt" --title "v%VERSION%" --notes "自動ビルドリリース" --repo Tomoro256/isbn-converter-gui
+gh release create v%VERSION% "dist\app\isbn_gui.exe" "dist\app\version.txt" --title "v%VERSION%" --notes "自動ビルドリリース" --repo Tomoro256/isbn-converter-gui
 goto git_push
 
 :git_push
 echo.
 set /p PUSHOK=GitHub にソースコードを push しますか？ (Y/N): 
 if /I "%PUSHOK%"=="Y" goto do_push
-goto finish
+goto zip_package
 
 :do_push
 git add .
 git commit -m "バージョン %VERSION% をリリース"
 git push
-goto finish
+goto zip_package
 
-:finish
+:zip_package
 echo.
 echo 配布用フォルダを作成中...
 
 if not exist dist\app mkdir dist\app
-copy /Y app\isbn_gui.exe dist\app\
+copy /Y dist\isbn_gui.exe dist\app\
 copy /Y app\version.txt dist\app\
 copy /Y app\isbn_icon.ico dist\app\
 

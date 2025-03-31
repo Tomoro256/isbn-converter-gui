@@ -1,9 +1,11 @@
-# ===== フォルダ内アイコン対応 最終版 isbn_gui.py（本体） =====
+# ===== フォルダ内アイコン対応・分割CSV出力付き v0.0.9 =====
 
 import FreeSimpleGUI as fsg
 import os
+from datetime import datetime
+import csv
 
-__version__ = "0.0.8"
+__version__ = "0.0.9"
 ICON_PATH = os.path.join(os.path.dirname(__file__), "app", "isbn_icon.ico")
 
 # ---------- ISBN変換ロジック ----------
@@ -66,6 +68,7 @@ layout = [
         fsg.Button("ファイル読み込み", key="LOAD", size=(14, 1)),
         fsg.Button("変換開始", key="CONVERT", size=(10, 1)),
         fsg.Button("CSV出力", key="SAVE", size=(10, 1)),
+        fsg.Button("分割CSV出力", key="SPLIT_SAVE", size=(12, 1)),
         fsg.Button("クリア", key="CLEAR", size=(8, 1)),
         fsg.Button("終了", key="EXIT", size=(8, 1))
     ]
@@ -87,7 +90,7 @@ while True:
                     data = f.read()
                 window["INPUT"].update(data)
             except Exception as ex:
-                fsg.popup_error(f"ファイル読み込みエラー: {ex}")
+                fsg.popup_error(f"ファイル読み込みエラー: {ex}", icon=ICON_PATH)
 
     elif event == "CONVERT":
         isbn_list = values["INPUT"].splitlines()
@@ -96,15 +99,55 @@ while True:
         window["ERROR"].update("\n".join(error_msgs))
 
     elif event == "SAVE":
-        filename = fsg.filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
+        output_lines = values["OUTPUT"].splitlines()
+        if not output_lines:
+            fsg.popup("保存するデータがありません。", icon=ICON_PATH)
+            continue
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        default_filename = f"isbn_output_{timestamp}.csv"
+        filename = fsg.filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[("CSV files", "*.csv")],
+            initialfile=default_filename
+        )
+
         if filename:
             try:
-                with open(filename, 'w', encoding='utf-8') as f:
-                    for line in values["OUTPUT"].splitlines():
-                        f.write(line + "\n")
-                fsg.popup("CSVファイルに保存しました。")
+                with open(filename, 'w', encoding='utf-8', newline='') as f:
+                    writer = csv.writer(f)
+                    for line in output_lines:
+                        writer.writerow([line])
+                fsg.popup("CSVファイルに保存しました。", icon=ICON_PATH)
             except Exception as ex:
-                fsg.popup_error(f"ファイル保存エラー: {ex}")
+                fsg.popup_error(f"ファイル保存エラー: {ex}", icon=ICON_PATH)
+
+    elif event == "SPLIT_SAVE":
+        output_lines = values["OUTPUT"].splitlines()
+        if not output_lines:
+            fsg.popup("保存するデータがありません。", icon=ICON_PATH)
+            continue
+
+        folder = fsg.filedialog.askdirectory(title="保存先フォルダを選んでください")
+        if not folder:
+            continue
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        base_name = f"isbn_output_{timestamp}"
+        chunk_size = 10000
+
+        try:
+            total_files = (len(output_lines) - 1) // chunk_size + 1
+            for i in range(total_files):
+                chunk = output_lines[i * chunk_size:(i + 1) * chunk_size]
+                filename = os.path.join(folder, f"{base_name}_{i+1}.csv")
+                with open(filename, 'w', encoding='utf-8', newline='') as f:
+                    writer = csv.writer(f)
+                    for line in chunk:
+                        writer.writerow([line])
+            fsg.popup(f"{total_files} ファイルに分割して保存しました。", icon=ICON_PATH)
+        except Exception as ex:
+            fsg.popup_error(f"保存エラー: {ex}", icon=ICON_PATH)
 
     elif event == "CLEAR":
         window["INPUT"].update("")
